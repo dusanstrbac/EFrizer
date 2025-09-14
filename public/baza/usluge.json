@@ -1,0 +1,62 @@
+[
+  {
+    "id": 1,
+    "name": "Kratka frizura",
+    "price": 1500
+  },
+  {
+    "id": 2,
+    "name": "Duga frizura",
+    "price": 2500
+  },
+  {
+    "id": 3,
+    "name": "Pranje kose",
+    "price": 500
+  },
+  {
+    "id": 4,
+    "name": "Farbanje kose",
+    "price": 3000
+  },
+  {
+    "id": 5,
+    "name": "Presa frizura",
+    "price": 2000
+  },
+  {
+    "id": 6,
+    "name": "Kosu sa peglom",
+    "price": 1800
+  },
+  {
+    "id": 7,
+    "name": "Regeneracija kose",
+    "price": 1200
+  },
+  {
+    "id": 8,
+    "name": "Balayage",
+    "price": 3500
+  },
+  {
+    "id": 9,
+    "name": "Keratin tretman",
+    "price": 4000
+  },
+  {
+    "id": 10,
+    "name": "Manikir",
+    "price": 1000
+  },
+  {
+    "id": 11,
+    "name": "Pedikir",
+    "price": 1200
+  },
+  {
+    "id": 12,
+    "name": "Depilacija",
+    "price": 800
+  }
+]

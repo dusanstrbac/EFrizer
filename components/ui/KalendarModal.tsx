@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'; // Import framer-motion za animacije
 import Button from './Button';
 import { ClipboardClock, ClipboardList } from 'lucide-react';
 import { KalendarProps } from '@/types/kalendar'; // Uvozimo KalendarProps tip
+import ZakazivanjeTermina from '../ZakazivanjeTermina';
 
 const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
   // Formatiranje datuma u obliku "3. septembar 2025" na latinici
@@ -13,6 +14,8 @@ const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
   const [clients, setClients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); 
+  const [isZakazivanjeOpen, setIsZakazivanjeOpen] = useState(false);
 
   // Učitaj termine za odabrani datum
   useEffect(() => {
@@ -59,6 +62,14 @@ const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
     }
   };
 
+  const otvoriZakazivanjeModal = () => {
+    setIsZakazivanjeOpen(true);
+  };
+
+  const zatvoriZakazivanjeModal = () => {
+    setIsZakazivanjeOpen(false);
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center z-50">
       <motion.div
@@ -96,17 +107,17 @@ const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
         </div>
 
         <div className="mt-auto flex gap-2 border-t border-gray-300 pt-4">
-          <Button 
-            title="Otkaži termin" 
-            icon={<ClipboardClock />} 
-            className="transition-all duration-200 ease-in-out hover:bg-red-500 hover:text-white"
-            action={otkaziTermin} // povezi funkciju sa dugmetom
-          />
+        <Button
+          title="Otkaži termin"
+          icon={<ClipboardClock />}
+          className="transition-all duration-200 ease-in-out hover:bg-red-500 hover:text-white"
+          action={otkaziTermin}
+        />
           <Button 
             title="Zakaži termin" 
             icon={<ClipboardClock />} 
             className="transition-all duration-200 ease-in-out hover:bg-green-500 hover:text-white"
-            action={() => alert('Zakazivanje termina')}
+            action={otvoriZakazivanjeModal}
           />
           <Button 
             title="Štampaj listing" 
@@ -115,6 +126,8 @@ const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
             action={() => alert('Štampanje listinga')}
           />
         </div>
+          {/* Prikaz ZakazivanjeTermina modala ako je otvoren */}
+          {isZakazivanjeOpen && <ZakazivanjeTermina onClose={zatvoriZakazivanjeModal} date={selectedDate} />}
       </motion.div>
     </div>
   );

@@ -1,6 +1,17 @@
 import { ReactElement } from "react";
 
-export type ButtonType = "primary" | "secondary" | "danger" | "default";
+export type ButtonType = 
+  | "primary" 
+  | "secondary" 
+  | "danger" 
+  | "default"
+  | "pocetna"
+  | "musterije"
+  | "salon"
+  | "izvodi"
+  | "podesavanja"
+  | "nalog";
+
 
 export interface ButtonProps {
     title: string;

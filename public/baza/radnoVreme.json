@@ -1,0 +1,9 @@
+{
+  "ponedeljak": { "open": "08:00", "close": "18:00" },
+  "utorak": { "open": "08:00", "close": "18:00" },
+  "sreda": { "open": "08:00", "close": "18:00" },
+  "cetvrtak": { "open": "08:00", "close": "18:00" },
+  "petak": { "open": "08:00", "close": "18:00" },
+  "subota": { "open": "10:00", "close": "16:00" },
+  "nedelja": { "open": "00:00", "close": "00:00" } 
+}
