@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "ime": "Marko",
+    "prezime": "Marković",
+    "email": "marko.markovic@example.com",
+    "telefon": "+381601234567"
+  },
+  {
+    "id": 2,
+    "ime": "Jelena",
+    "prezime": "Petrović",
+    "email": "jelena.petrovic@example.com",
+    "telefon": "+381603456789"
+  },
+  {
+    "id": 3,
+    "ime": "Nikola",
+    "prezime": "Jovanović",
+    "email": "nikola.jovanovic@example.com",
+    "telefon": "+381609876543"
+  },
+  {
+    "id": 4,
+    "ime": "Ana",
+    "prezime": "Kovačević",
+    "email": "ana.kovacevic@example.com",
+    "telefon": "+381602345678"
+  },
+  {
+    "id": 5,
+    "ime": "Stefan",
+    "prezime": "Marković",
+    "email": "stefan.markovic@example.com",
+    "telefon": "+381601234890"
+  }
+]
