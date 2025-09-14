@@ -53,6 +53,10 @@ const Button = ({
         baseStyle = isActive ? "bg-red-500 text-white" : "bg-white text-red-500 border-red-500"; 
         hoverStyle = "hover:bg-red-400 hover:text-white hover:border-red-400"; 
         break;
+      case "noviKorisnik":
+        baseStyle = isActive ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white" : "bg-white text-blue-500 border-blue-500";
+        hoverStyle = "hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white hover:border-blue-600";  // Gradient and hover effects
+        break;
       default:
         baseStyle = "bg-white text-black border-gray-300"; 
         hoverStyle = "hover:bg-gray-200 hover:text-black hover:border-gray-400";

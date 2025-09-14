@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Button from './Button';
-import { Edit } from 'lucide-react'; // Import ikone za izmenu
+import { Edit, X } from 'lucide-react'; // Importuj X ikonu za zatvaranje
 
 interface ModalProps {
   isOpen: boolean;
@@ -34,7 +34,15 @@ const IzmeniMusterijaModal: React.FC<ModalProps> = ({ isOpen, onClose, onSave, m
 
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-1/3">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-1/3 relative">
+        {/* Ikona za zatvaranje */}
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        >
+          <X size={20} />
+        </button>
+
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Edit className={`${iconColor} text-xl`} /> Izmeni podatke korisniku
         </h2>

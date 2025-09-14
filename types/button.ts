@@ -10,7 +10,8 @@ export type ButtonType =
   | "salon"
   | "izvodi"
   | "podesavanja"
-  | "nalog";
+  | "nalog"
+  | "noviKorisnik";
 
 
 export interface ButtonProps {
