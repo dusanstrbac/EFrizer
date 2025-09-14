@@ -12,10 +12,9 @@ const korisnikSchema = z.object({
   email: z.string().email('Neispravan email').min(1, 'Email je obavezan'),
   telefon: z.string()
     .min(1, 'Telefon je obavezan')
-    .regex(/^\+(\d{1,})$/, 'Telefon mora početi sa + i biti samo cifre') // Regex koji zahteva da telefon počne sa + i sadrži samo cifre
+    .regex(/^\+(\d{1,})$/, 'Telefon mora početi sa + oznako i imati samo brojeve')
 });
 
-// Tip za korisnika prema Zod shemi
 type Korisnik = z.infer<typeof korisnikSchema>;
 
 interface DodajKorisnikaProps {
@@ -31,9 +30,7 @@ const DodajKorisnika: React.FC<DodajKorisnikaProps> = ({ isOpen, onClose, onSave
   const [telefon, setTelefon] = useState('');
   const [errors, setErrors] = useState<Partial<Korisnik>>({});
 
-  // Funkcija za submit forme
   const handleSubmit = () => {
-    // Validacija pomoću Zod
     const result = korisnikSchema.safeParse({ ime, prezime, email, telefon });
 
     if (result.success) {
@@ -49,7 +46,6 @@ const DodajKorisnika: React.FC<DodajKorisnikaProps> = ({ isOpen, onClose, onSave
           formErrors[err.path[0] as keyof Korisnik] = err.message;
         });
       }
-
       setErrors(formErrors);
     }
   };
