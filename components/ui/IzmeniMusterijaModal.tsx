@@ -44,7 +44,7 @@ const IzmeniMusterijaModal: React.FC<ModalProps> = ({ isOpen, onClose, onSave, m
         </button>
 
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Edit className={`${iconColor} text-xl`} /> Izmeni podatke korisniku
+          <Edit className={`${iconColor} text-xl`} /> Izmeni podatke mušteriji
         </h2>
         <form>
           <div className="mb-4">

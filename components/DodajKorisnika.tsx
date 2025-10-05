@@ -12,7 +12,7 @@ const korisnikSchema = z.object({
   email: z.string().email('Neispravan email').min(1, 'Email je obavezan'),
   telefon: z.string()
     .min(1, 'Telefon je obavezan')
-    .regex(/^\+(\d{1,})$/, 'Telefon mora početi sa + oznako i imati samo brojeve')
+    .regex(/^\+(\d{1,})$/, 'Telefon mora početi sa + oznakom i može imati samo brojeve')
 });
 
 type Korisnik = z.infer<typeof korisnikSchema>;
@@ -63,7 +63,7 @@ const DodajKorisnika: React.FC<DodajKorisnikaProps> = ({ isOpen, onClose, onSave
           <X size={20} />
         </button>
 
-        <h2 className="text-2xl mb-4">Dodaj novog korisnika</h2>
+        <h2 className="text-2xl mb-4">Dodaj novu mušteriju</h2>
         
         {/* Polje za ime */}
         <div className="mb-4">
@@ -117,7 +117,7 @@ const DodajKorisnika: React.FC<DodajKorisnikaProps> = ({ isOpen, onClose, onSave
           {errors.telefon && <p className="text-red-500 text-sm">{errors.telefon}</p>}
         </div>
 
-        {/* Dugmadi za otkazivanje i dodavanje */}
+        {/* Dugmad za otkazivanje i dodavanje */}
         <div className="flex justify-between gap-4">
           <Button
             title="Otkazi"
