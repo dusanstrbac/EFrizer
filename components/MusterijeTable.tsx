@@ -99,7 +99,7 @@ const MusterijeTable = () => {
         <div className="relative w-full max-w-xs">
           <input
             type="text"
-            placeholder="Pretraži korisnike..."
+            placeholder="Pretraži mušteriju..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} 
             className="w-full border px-4 py-1 rounded-lg pl-8"
@@ -110,7 +110,7 @@ const MusterijeTable = () => {
         {/* Dugme za Novi korisnik */}
         <div>
           <Button
-            title="Novi korisnik"
+            title="Dodaj mušteriju"
             icon={<Plus width={18} />}
             action={() => setIsAddModalOpen(true)}
             buttonType="noviKorisnik"
