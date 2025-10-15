@@ -246,10 +246,73 @@ export default function PodesavanjaPage() {
                 );
             case "Lokal":
                 return (
-                    <div>
-                        <p>Napraviti da je ovo iskljucivo administratorska stranica. Mogucnost menjanja radnog vremena, lokacije ...</p>
+                    <div className="space-y-10">
+                        <div>
+                            <p className="text-lg font-bold mb-4">Osnovne informacije o lokalu</p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Naziv lokala</label>
+                                    <input
+                                        type="text"
+                                        value={"Salon Lepote 'GlowUp'"} // TODO: vezati za API
+                                        onChange={() => {}}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Adresa</label>
+                                    <input
+                                        type="text"
+                                        value={"Bulevar Kralja Aleksandra 123, Beograd"}
+                                        onChange={() => {}}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kontakt telefon</label>
+                                    <input
+                                        type="text"
+                                        value={"+381601234567"}
+                                        onChange={() => {}}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        value={"kontakt@glowup.rs"}
+                                        onChange={() => {}}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <p className="text-lg font-bold mb-4">Radno vreme</p>
+                            <div className="space-y-4">
+                                {["Ponedeljak", "Utorak", "Sreda", "Četvrtak", "Petak", "Subota", "Nedelja"].map((dan) => (
+                                    <div key={dan} className="grid grid-cols-3 gap-4 items-center">
+                                        <p className="text-sm font-medium">{dan}</p>
+                                        <input
+                                            type="time"
+                                            className="px-2 py-1 border border-gray-300 rounded"
+                                            defaultValue={"09:00"}
+                                            onChange={() => {}}
+                                        />
+                                        <input
+                                            type="time"
+                                            className="px-2 py-1 border border-gray-300 rounded"
+                                            defaultValue={"17:00"}
+                                            onChange={() => {}}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 );
+
             case "Pomoć i podrška":
                 return (
                     <div className="space-y-10">
