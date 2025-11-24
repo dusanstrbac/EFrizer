@@ -1,52 +1,38 @@
 'use client';
-import { useState, useRef, useEffect } from "react";
+import UslugaModal from "@/components/UslugaModal";
+import { Firma, FirmaAsortimanDTO, Lokacije } from "@/types/firma";
+import { getCookie } from "cookies-next";
+import { body } from "framer-motion/client";
+import { Trash2 } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
 // AŽURIRANO: Dodajemo novi tab 'Usluge'
 const tabs = ['Osnovne informacije', 'Zaposleni', 'Inventar', 'Usluge'];
 
-// Fiksna lista lokala za primer (nepromenjena)
-const salons = [
-    { 
-        id: 1, 
-        name: "Salon lepote 'GlowUp' - Centar", 
-        address: "Bulevar Kralja Aleksandra 123, Beograd",
-        supplyStatus: "U redu", 
-        dailyTarget: 45000 
-    },
-    { 
-        id: 2, 
-        name: "Salon lepote 'GlowUp' - Novi Beograd", 
-        address: "Jurija Gagarina 22, Novi Beograd",
-        supplyStatus: "Zahteva proveru", 
-        dailyTarget: 38000 
-    },
-];
-
-// NOVO: Lista usluga sa dodatkom lokacijaId
-const allServices = [
-    { id: 1, name: "Kratka frizura", price: 1500, lokacijaId: 1, category: "Frizerske" }, // Centar
-    { id: 2, name: "Duga frizura", price: 2500, lokacijaId: 1, category: "Frizerske" }, // Centar
-    { id: 3, name: "Pranje kose", price: 500, lokacijaId: 1, category: "Frizerske" }, // Centar
-    { id: 4, name: "Farbanje kose", price: 3000, lokacijaId: 1, category: "Frizerske" }, // Centar
-    { id: 5, name: "Presa frizura", price: 2000, lokacijaId: 2, category: "Frizerske" }, // Novi Beograd
-    { id: 6, name: "Kosu sa peglom", price: 1800, lokacijaId: 2, category: "Frizerske" }, // Novi Beograd
-    { id: 7, name: "Regeneracija kose", price: 1200, lokacijaId: 1, category: "Frizerske" }, // Centar
-    { id: 8, name: "Balayage", price: 3500, lokacijaId: 2, category: "Frizerske" }, // Novi Beograd
-    { id: 9, name: "Keratin tretman", price: 4000, lokacijaId: 2, category: "Frizerske" }, // Novi Beograd
-    { id: 10, name: "Manikir", price: 1000, lokacijaId: 1, category: "Kozmetičke" }, // Centar
-    { id: 11, name: "Pedikir", price: 1200, lokacijaId: 2, category: "Kozmetičke" }, // Novi Beograd
-    { id: 12, name: "Depilacija", price: 800, lokacijaId: 2, category: "Kozmetičke" }, // Novi Beograd
-];
+const formatirajDatum = (datum: string) => {
+    return new Date(datum).toLocaleDateString("sr-RS");
+}
 
 export default function SalonPage() {
+    const [firma, setFirma] = useState<Firma | null>(null); 
+    const [salons, setSalons] = useState<Lokacije[]>([]);
+    const [selectedSalonId, setSelectedSalonId] = useState<number | null>(null);
+    const [isUslugeModalOpen, setIsUslugeModalOpen] = useState(false);
+    const [editingUsluge, setEditingUsluge] = useState(null);
+    const [asortiman, setAsortiman] = useState<FirmaAsortimanDTO[]>([]);
+    const [loadingAsortiman, setLoadingAsortiman] = useState(false);
+    const [asortimanError, setAsortimanError] = useState<string | null>(null);
+
+
+
     const [activeTab, setActiveTab] = useState(tabs[0]);
     const containerRef = useRef<HTMLDivElement>(null);
     const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
 
     const tabRefs = useRef<(HTMLButtonElement | null)[]>(Array(tabs.length).fill(null));
 
-    const [selectedSalonId, setSelectedSalonId] = useState(salons[0].id);
     const selectedSalon = salons.find(s => s.id === selectedSalonId);
+
     
     useEffect(() => {
         const index = tabs.findIndex(tab => tab === activeTab);
@@ -60,24 +46,121 @@ export default function SalonPage() {
             setUnderlineStyle({ left, width });
         }
     }, [activeTab]);
-    
+
+    // Fetch firme
+    useEffect(() => {
+        const fetchFirma = async () => {
+        try {
+            const token = getCookie("AuthToken");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Firme/DajFirme`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+            });
+            const data = await res.json();
+            setFirma(data[0]);
+            setSalons(data[0]?.lokacije || []);
+            setSelectedSalonId(data[0]?.lokacije[0]?.id || null);
+        } catch (error: unknown) {
+            console.error('Greška prilikom učitavanja firme:', error);
+        }
+        };
+        fetchFirma();
+    }, []);
+
+    // --- Fetch asortimana po lokaciji ---
+    useEffect(() => {
+        if (!selectedSalonId || !firma) return;
+
+        const fetchAsortiman = async () => {
+            setLoadingAsortiman(true);
+            setAsortimanError(null);
+
+            try {
+                const token = getCookie("AuthToken");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Usluge/DajAsortiman?idFirme=${firma.id}&idLokacije=${selectedSalonId}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Greška prilikom učitavanja asortimana.");
+
+                const data: FirmaAsortimanDTO[] = await res.json();
+                setAsortiman(data);
+            } catch (err) {
+                console.error(err);
+                setAsortimanError("Ne mogu da učitam asortiman.");
+            } finally {
+                setLoadingAsortiman(false);
+            }
+        };
+
+        fetchAsortiman();
+    }, [selectedSalonId, firma]);
+
+    // Sortirane usluge
+    const [searchServiceTerm, setSearchServiceTerm] = useState("");
+
+    const filteredServices = useMemo(() => {
+        if (!asortiman) return [];
+
+        return asortiman
+            .filter(service => service.idLokacije === selectedSalonId)
+            .filter(service =>
+                service.nazivUsluge.toLowerCase().includes(searchServiceTerm.toLowerCase())
+            )
+            .sort((a, b) =>
+                a.nazivUsluge.localeCompare(b.nazivUsluge, "sr", { sensitivity: "base" })
+            );
+    }, [asortiman, selectedSalonId, searchServiceTerm]);
+
+    // Brisanje usluga iz asortimana korisnika
+    const handleDeleteService = async (service: FirmaAsortimanDTO) => {
+        if (!confirm("Da li ste sigurni da želite da obrišete ovu uslugu?")) return;
+
+        try {
+            const token = getCookie("AuthToken");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Usluge/ObrisiUslugu`, {
+                method: "DELETE",
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    idFirme: service.idFirme,
+                    idLokacije: service.idLokacije,
+                    idKategorije: service.idKategorije,
+                    idUsluge: service.idUsluge
+                }),
+        });
+
+            if (!res.ok) throw new Error("Greška prilikom brisanja usluge.");
+
+            setAsortiman(prev => prev.filter(s => s.idUsluge !== service.idUsluge));
+            alert(`Usluga "${service.nazivUsluge}", je uspešno obrisana`);
+
+        } catch (err) {
+            console.error(err);
+            alert("Neuspešno brisanje usluge.");
+        }
+    };
+
     // --- Zaposleni Logika - AŽURIRANO SA STVARNIM PODACIMA ---
     const [searchTerm, setSearchTerm] = useState("");
-    const employees = [
-        { ime: "Jovana Nikolić", uloga: "Frizer", status: "Aktivan", telefon: "+381601112233", email: "jovana@glowup.rs", datum: "01.02.2022", lokacijaId: 1 }, 
-        { ime: "Marko Ilić", uloga: "Recepcioner", status: "Na odmoru", telefon: "+381601234567", email: "marko@glowup.rs", datum: "15.07.2023", lokacijaId: 1 }, 
-        { ime: "Ana Petrović", uloga: "Kozmetičar", status: "Aktivan", telefon: "+381602224466", email: "ana@glowup.rs", datum: "10.05.2021", lokacijaId: 2 },
-        { ime: "Petar Jovanović", uloga: "Frizer", status: "Aktivan", telefon: "+381603335577", email: "petar@glowup.rs", datum: "05.11.2023", lokacijaId: 2 }
-    ]; 
-    const filteredEmployees = employees
-        .filter((zaposleni) => zaposleni.lokacijaId === selectedSalonId)
-        .filter((zaposleni) => {
+    const zaposleni = selectedSalon?.zaposleni;
+
+    const filteredEmployees = (zaposleni ?? [])
+        .filter((z) => selectedSalon?.id === selectedSalonId)
+        .filter((z) => {
             return (
-                zaposleni.ime.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                zaposleni.uloga.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                zaposleni.status.toLowerCase().includes(searchTerm.toLowerCase())
+                z.ime.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                z.uloga.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                z.statusRada.toLowerCase().includes(searchTerm.toLowerCase())
             );
         });
+
+        const registrujZaposlenog = () => {
+            alert("Ulazite u registraciju novog radnika");
+        }
 
     // --- Inventar Logika - AŽURIRANO SA STVARNIM PODACIMA ---
     const [searchInventoryTerm, setSearchInventoryTerm] = useState("");
@@ -96,18 +179,6 @@ export default function SalonPage() {
             );
         });
 
-    // --- Usluge Logika (NEPROMENJENA, radi kako treba) ---
-    const [searchServiceTerm, setSearchServiceTerm] = useState("");
-
-    const filteredServices = allServices
-        .filter((service) => service.lokacijaId === selectedSalonId)
-        .filter((service) => {
-            return (
-                service.name.toLowerCase().includes(searchServiceTerm.toLowerCase()) ||
-                service.category.toLowerCase().includes(searchServiceTerm.toLowerCase())
-            );
-        });
-        
     // Funkcija za formatiranje novca (nepromenjena)
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat('sr-RS', {
@@ -118,21 +189,30 @@ export default function SalonPage() {
         }).format(amount).replace('RSD', '').trim() + ' RSD';
     };
 
+    const registrujArtikal = () => {
+        alert("Dodajete proizvod u sistem");
+    }
+
+    const registrujUslugu = () => {
+        setEditingUsluge(null);
+        setIsUslugeModalOpen(true);
+    }
+
     const renderTabContent = () => {
         switch (activeTab) {
             case 'Osnovne informacije':
                 return (
                     <div className="space-y-2">
-                        <p><strong>Naziv:</strong> {selectedSalon?.name}</p>
-                        <p><strong>Adresa:</strong> {selectedSalon?.address}</p>
-                        <p><strong>Telefon:</strong> +381 60 1234567</p>
-                        <p><strong>Email:</strong> kontakt@glowup.rs</p>
+                        <p><strong>Naziv:</strong> {firma?.naziv}</p>
+                        <p><strong>Adresa:</strong> {selectedSalon?.adresa}, {selectedSalon?.nazivLokacije}</p>
+                        <p><strong>Telefon:</strong> {selectedSalon?.telefon}</p>
+                        <p><strong>Email:</strong> {selectedSalon?.email}</p>
                         <p><strong>Menadžer:</strong> Milica Petrović</p>
                         
                         <p>
                             <strong>Dnevni cilj:</strong> 
                             <span className="ml-1 text-blue-600 font-semibold">
-                                {formatCurrency(selectedSalon?.dailyTarget || 0)}
+                                N/A za sad
                             </span>
                         </p>
                         
@@ -141,11 +221,11 @@ export default function SalonPage() {
                         <p>
                             {/* UKUPAN INVENTAR - Sada koristi stvarne podatke */}
                             <strong>Ukupan inventar:</strong> {filteredInventory.length} stavki 
-                            <span className={`ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                            {/* <span className={`ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
                                 selectedSalon?.supplyStatus === 'U redu' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                             }`}>
                                 ({selectedSalon?.supplyStatus})
-                            </span>
+                            </span> */}
                         </p>
                         {/* BROJ USLUGA - Sada koristi stvarne podatke */}
                         <p>
@@ -156,7 +236,10 @@ export default function SalonPage() {
             case 'Zaposleni':
                 return (
                     <div className="space-y-4">
-                        <div className="flex justify-end mb-4">
+                        <div className="flex justify-between mb-4">
+                            <button className="border rounded-lg py-2 px-6 cursor-pointer hover:bg-gray-300" onClick={registrujZaposlenog}>
+                                Dodaj / Izmeni Zaposlenog
+                            </button>
                             <input
                                 type="text"
                                 placeholder="Pretraži zaposlene..."
@@ -185,14 +268,14 @@ export default function SalonPage() {
                                             <td className="p-2 border">{zaposleni.uloga}</td>
                                             <td className="p-2 border">
                                                 <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                    zaposleni.status === 'Aktivan' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                                                    zaposleni.statusRada === 'aktivan' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                                                 }`}>
-                                                    {zaposleni.status}
+                                                    {zaposleni.statusRada}
                                                 </span>
                                             </td>
                                             <td className="p-2 border">{zaposleni.telefon}</td>
                                             <td className="p-2 border">{zaposleni.email}</td>
-                                            <td className="p-2 border">{zaposleni.datum}</td>
+                                            <td className="p-2 border">{zaposleni.datumKreiranja && formatirajDatum(zaposleni.datumKreiranja)}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -203,7 +286,10 @@ export default function SalonPage() {
             case 'Inventar':
                 return (
                     <div className="space-y-4"> 
-                        <div className="flex justify-end mb-4">
+                        <div className="flex justify-between mb-4">
+                            <button className="border rounded-lg py-2 px-6 cursor-pointer hover:bg-gray-300" onClick={registrujArtikal}>
+                                Dodaj / Izmeni Artikal
+                            </button>
                             <input
                                 type="text"
                                 placeholder="Pretraži inventar..."
@@ -250,7 +336,10 @@ export default function SalonPage() {
             case 'Usluge':
                 return (
                     <div className="space-y-4"> 
-                        <div className="flex justify-end mb-4">
+                        <div className="flex justify-between mb-4">
+                            <button className="border rounded-lg py-2 px-6 cursor-pointer hover:bg-gray-300" onClick={registrujUslugu}>
+                                Dodaj / Izmeni Uslugu
+                            </button>
                             <input
                                 type="text"
                                 placeholder="Pretraži usluge..."
@@ -266,15 +355,25 @@ export default function SalonPage() {
                                         <th className="p-2 border">Naziv usluge</th>
                                         <th className="p-2 border">Kategorija</th>
                                         <th className="p-2 border">Cena</th>
+                                        <th className="p-2 border">Akcija</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredServices.map((service) => (
                                         <tr key={service.id} className="text-sm text-center">
-                                            <td className="p-2 border">{service.name}</td>
-                                            <td className="p-2 border">{service.category}</td>
+                                            <td className="p-2 border">{service.nazivUsluge}</td>
+                                            <td className="p-2 border">{service.nazivKategorije}</td>
                                             <td className="p-2 border font-semibold text-gray-700">
-                                                {formatCurrency(service.price)}
+                                                {formatCurrency(service.cena)}
+                                            </td>
+                                            <td className="p-2 border">
+                                                <button
+                                                className="text-red-600 hover:text-red-800"
+                                                onClick={() => handleDeleteService(service)}
+                                                title="Obriši uslugu"
+                                                >
+                                                <Trash2 size={18} className="cursor-pointer"/>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -297,7 +396,7 @@ export default function SalonPage() {
                 ref={containerRef}
                 className="relative flex justify-between items-end mb-6 border-b pb-2" 
             >
-                {/* 1. Deo: Tabovi (Sada sa 'Usluge') */}
+                {/* 1. Deo: Tabovi za selektovanje */}
                 <div className="flex gap-4 tabs-container">
                     {tabs.map((tab, index) => (
                         <button
@@ -317,17 +416,20 @@ export default function SalonPage() {
                 {selectedSalon && (
                     <div className="text-right pb-1"> 
                         <select
-                            value={selectedSalonId}
+                            value={selectedSalonId ?? ''}
                             onChange={(e) => setSelectedSalonId(parseInt(e.target.value))}
                             className="p-1 border rounded text-sm font-medium bg-gray-50"
                         >
                             {salons.map((salon) => (
                                 <option key={salon.id} value={salon.id}>
-                                    {salon.name}
+                                    {firma?.naziv} - {salon.nazivLokacije}
                                 </option>
                             ))}
                         </select>
-                        <p className="text-xs text-gray-500 mt-1">{selectedSalon.address}</p>
+
+                        <p className="text-xs text-gray-500 mt-1">
+                            {selectedSalon.adresa}, {selectedSalon.nazivLokacije}
+                        </p>
                     </div>
                 )}
                 
@@ -344,6 +446,19 @@ export default function SalonPage() {
             <div className="space-y-4">
                 {renderTabContent()}
             </div>
+
+            <UslugaModal
+                isOpen={isUslugeModalOpen}
+                onClose={() => setIsUslugeModalOpen(false)}
+                onSave={(service) => {
+                    console.log("Sačuvana usluga:", service);
+                    alert("Usluga sačuvana!");
+                }}
+                salons={salons}
+                selectedSalonId={selectedSalonId}
+                firmaId={firma?.id ?? null}
+            />
+
         </div>
     );
 }

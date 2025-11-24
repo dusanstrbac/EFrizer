@@ -5,16 +5,17 @@ import Button from './Button';
 import { ClipboardClock, ClipboardList } from 'lucide-react';
 import { KalendarProps } from '@/types/kalendar'; // Uvozimo KalendarProps tip
 import ZakazivanjeTermina from '../ZakazivanjeTermina';
+import { Client } from '@/types/klijenti';
 
 const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
   // Formatiranje datuma u obliku "3. septembar 2025" na latinici
   const formattedDate = `${date.getDate()}. ${date.toLocaleString('sr-Latn-RS', { month: 'long' })} ${date.getFullYear()}`;
 
   // Stanje za klijente i učitane podatke
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); 
+  const [selectedDate] = useState<Date>(new Date()); 
   const [isZakazivanjeOpen, setIsZakazivanjeOpen] = useState(false);
 
   // Učitaj termine za odabrani datum
@@ -39,7 +40,7 @@ const KalendarModal: React.FC<KalendarProps> = ({ date, onClose }) => {
           setClients([]); // Ako nema termina za datum, postavljamo prazan niz
           setError('Nema zakazanih termina trenutno za ovaj datum.');
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         // U slučaju greške, postavljamo error u stanje ( ukoliko se recimo ne učita baza podataka )
         console.error('Greška pri učitavanju termina:', error);
         setError('Došlo je do greške prilikom učitavanja termina.');

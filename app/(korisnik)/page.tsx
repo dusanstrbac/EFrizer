@@ -1,10 +1,18 @@
 'use client';
 import { useState, useEffect } from "react";
 import Kalendar from "@/components/ui/Kalendar";
+import { Firma } from "@/types/firma";
+import { useCookies } from "react-cookie";
+
+interface DayHours {
+  open: string;   // "HH:mm"
+  close: string;  // "HH:mm"
+}
+
+type WorkingHours = Record<string, DayHours>;
 
 export default function Home() {
-  // State za radno vreme lokala (samo za učitavanje podataka, ako je potrebno)
-  const [workingHours, setWorkingHours] = useState<any>(null);
+  const [workingHours, setWorkingHours] = useState<WorkingHours | null>(null);
 
   // Fetch radnog vremena
   useEffect(() => {
@@ -13,15 +21,14 @@ export default function Home() {
         const response = await fetch('/baza/radnoVreme.json');
         const data = await response.json();
         setWorkingHours(data);
-      } catch (error) {
-        console.error('Failed to load working hours:', error);
+      } catch (error : unknown) {
+        console.error('Greška prilikom učitavanja radnog vremena:', error);
       }
     };
 
     fetchWorkingHours();
   }, []);
 
-  // Ako radno vreme nije učitano, prikazujemo loading
   if (!workingHours) {
     return <div>Loading...</div>;
   }

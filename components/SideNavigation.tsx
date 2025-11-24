@@ -8,37 +8,37 @@ const buttons = [
         title: "Početna",
         icon: <House />,
         action: () => '/',
-        buttonType: "pocetna" as "pocetna"
+        buttonType: "pocetna" as const
     },
     {
         title: "Mušterije",
         icon: <Users />,
         action: () => '/musterije',
-        buttonType: "musterije" as "musterije"
+        buttonType: "musterije" as const
     },
     {
         title: "Izvodi",
         icon: <LibraryBig />,
         action: () => '/izvodi',
-        buttonType: "izvodi" as "izvodi"
+        buttonType: "izvodi" as const
     },
     {
         title: "Salon",
         icon: <Building2 />,
         action: () => '/salon',
-        buttonType: "salon" as "salon"
+        buttonType: "salon" as const
     },
     {
         title: "Podešavanja",
         icon: <Settings />,
         action: () => '/podesavanja',
-        buttonType: "podesavanja" as "podesavanja"
+        buttonType: "podesavanja" as const
     },
     {
         title: "Nalog",
         icon: <User />,
         action: () => '/profil',
-        buttonType: "nalog" as "nalog"
+        buttonType: "nalog" as const
     }
 ];
 

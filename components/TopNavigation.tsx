@@ -2,9 +2,16 @@
 'use client';
 import { useState, useEffect } from "react";
 
+interface DayHours {
+  open: string;   // "HH:mm"
+  close: string;  // "HH:mm"
+}
+
+type WorkingHours = Record<string, DayHours>;
+
 const TopNavigation = () => {
   // State za radno vreme lokala
-  const [workingHours, setWorkingHours] = useState<any>(null);
+  const [workingHours, setWorkingHours] = useState<WorkingHours | null>(null);
 
   // Funkcija koja dobija današnji datum i vreme
   const today = new Date();

@@ -3,19 +3,20 @@
 import React, { useState } from 'react';
 import Button from './Button';
 import { Edit, X } from 'lucide-react'; // Importuj X ikonu za zatvaranje
+import { Musterija } from '@/types/musterija';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (updatedMusterija: any) => void;
-  musterija: any;
+  onSave: (updatedMusterija: Musterija) => void;
+  musterija: Musterija;
 }
 
 const IzmeniMusterijaModal: React.FC<ModalProps> = ({ isOpen, onClose, onSave, musterija }) => {
+  const [updatedMusterija, setUpdatedMusterija] = useState(musterija);
+
   if (!isOpen) return null; // Ako modal nije otvoren, ne prikazuj ništa
 
-  // Formiranje nove vrednosti prilikom promena
-  const [updatedMusterija, setUpdatedMusterija] = useState(musterija);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>, field: string) => {
     setUpdatedMusterija({

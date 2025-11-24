@@ -5,14 +5,7 @@ import { Search, Plus } from 'lucide-react';
 import IzmeniMusterijaModal from './ui/IzmeniMusterijaModal';
 import Button from './ui/Button';
 import DodajKorisnika from './DodajKorisnika'; // Importujemo novu komponentu
-
-interface Musterija {
-  id: number;
-  ime: string;
-  prezime: string;
-  email: string;
-  telefon: string;
-}
+import { Musterija } from '@/types/musterija';
 
 const MusterijeTable = () => {
   const [musterije, setMusterije] = useState<Musterija[]>([]);

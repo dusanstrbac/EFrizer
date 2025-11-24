@@ -1,3 +1,4 @@
+import { Address, Service } from "@/types/zakazivanje";
 import React, { useEffect, useState } from "react";
 
 const ZakazivanjeTermina = ({
@@ -7,14 +8,14 @@ const ZakazivanjeTermina = ({
   onClose: () => void;
   date: Date; // Tip za datum
 }) => {
-  const [services, setServices] = useState<any[]>([]); // Stanje za usluge
+  const [services, setServices] = useState<Service[]>([]); // Stanje za usluge
   const [selectedService, setSelectedService] = useState<string>(''); // Stanje za selektovanu uslugu
   const [userName, setUserName] = useState<string>(''); // Stanje za ime i prezime korisnika
   const [arrivalTime, setArrivalTime] = useState<string>(''); // Stanje za vreme dolaska korisnika
   const [loading, setLoading] = useState<boolean>(true); // Za praćenje učitavanja
   const [error, setError] = useState<string | null>(null); // Za greške
   const [selectedAddress, setSelectedAddress] = useState<string>(''); // Stanje za selektovanu adresu salona
-  const [addresses, setAddresses] = useState<any[]>([]); // Stanje za adrese salona
+  const [addresses, setAddresses] = useState<Address[]>([]); // Stanje za adrese salona
 
   // Formatiraj datum u obliku "3. septembar 2025"
   const formattedDate = `${date.getDate()}. ${date.toLocaleString("sr-Latn-RS", { month: "long" })} ${date.getFullYear()}`;
@@ -30,7 +31,7 @@ const ZakazivanjeTermina = ({
         }
         const data = await response.json();
         setServices(data); // Postavi učitane usluge
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Greška pri učitavanju usluga:', error);
         setError('Došlo je do greške prilikom učitavanja usluga.');
       } finally {
@@ -53,7 +54,7 @@ const ZakazivanjeTermina = ({
         const data = await response.json();
         setAddresses(data); // Postavi učitane adrese
         setSelectedAddress(data[0]?.name || ''); // Postavi prvu adresu kao default
-        } catch (error: any) {
+        } catch (error: unknown) {
         console.error('Greška pri učitavanju adresa:', error);
         setError('Došlo je do greške prilikom učitavanja adresa.');
         }
