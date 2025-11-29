@@ -1,14 +1,16 @@
 'use client'
-import { setCookie } from "cookies-next";
+import BetaOverlay from "@/components/BetaOverlay";
+import { dajKorisnikaIzTokena } from "@/lib/auth";
+import { Firma } from "@/types/firma";
+import { deleteCookie, getCookie } from "cookies-next";
 import { BellIcon, BuildingIcon, PaletteIcon, PhoneCall, Shield } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { useCookies } from "react-cookie";
 
 export default function PodesavanjaPage() {
-    const [cookie] = useCookies(['authToken']);
-    const [aktivnaSekcija, setAktivnaSekcija] = useState("Profil");
+    const [aktivnaSekcija, setAktivnaSekcija] = useState("Notifikacije");
     const router = useRouter();
+    const [firma, setFirma] = useState<Firma | null>(null);
     const sekcije = [
         { naziv: "Notifikacije", ikonica: <BellIcon size={18} />},
         { naziv: "Sigurnost", ikonica: <Shield size={18} />},
@@ -16,7 +18,9 @@ export default function PodesavanjaPage() {
         { naziv: "Lokal", ikonica: <BuildingIcon size={18} />},
         { naziv: "Pomoć i podrška", ikonica: <PhoneCall size={18} />}
     ];
+    const korisnik = dajKorisnikaIzTokena();
 
+    // Ovo treba smestiti u bazu u parametrizaciju web-a
     const emailTehnickePodrske = "dusan.strbac01@gmail.com"
     const telefonTehnickePodrske = "+381607292777"
 
@@ -42,15 +46,25 @@ export default function PodesavanjaPage() {
         );
     };
 
-    const odjaviKorisnika = () => {
-        setCookie('authToken', "", {
-            path: '/',
-            sameSite: 'lax',
-            secure: true,
-            maxAge: 0,
-        });
-        router.push("/login");
-    }
+    // Fetch firme
+    useEffect(() => {
+        const fetchFirma = async () => {
+        try {
+            const token = getCookie("AuthToken");
+            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Firme/DajFirme`, {
+            method: "GET",
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+            });
+            const data = await res.json();
+            setFirma(data[0]);
+        } catch (error: unknown) {
+            console.error('Greška prilikom učitavanja firme:', error);
+        }
+        };
+        fetchFirma();
+    }, []);
 
     const promeniLozinku = async () => {
         if (novaLozinka !== potvrdaLozinka) {
@@ -62,15 +76,13 @@ export default function PodesavanjaPage() {
             alert('Nova lozinka mora imati najmanje 6 karaktera');
             return;
         }
-
-        const tokenPayload = JSON.parse(atob(cookie.authToken.split('.')[1]));
-        const korisnickoIme = tokenPayload.sub;
-
+        const token = getCookie("AuthToken");
+        const korisnickoIme = dajKorisnikaIzTokena()?.korisnickoIme        
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Korisnik/PromeniLozinku`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${cookie.authToken}`
+                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 korisnickoIme,
@@ -87,9 +99,10 @@ export default function PodesavanjaPage() {
             return;
         }
         alert("Uspešno ste promenili lozinku!"); // Kasnije promeniti u pop-up modal sa informacijom
-        // Izbaci korisnika da se ponovo loguje na nalog sa novom lozinkom
-        odjaviKorisnika();
-
+        
+        // Odjavi korisnika da bi se resetovao token
+        deleteCookie("AuthToken");
+        router.push('/login');
     };
 
     const aktiviraj2FA = () => {
@@ -116,6 +129,7 @@ export default function PodesavanjaPage() {
         switch (aktivnaSekcija) {
             case "Notifikacije":
                 return (
+                    <BetaOverlay isBlocked={true}>
                     <div className="space-y-10">
                         <div className="space-y-1">
                             <p className="text-lg font-bold">Email obaveštenja</p>
@@ -178,6 +192,7 @@ export default function PodesavanjaPage() {
                             </div>
                         </div>
                     </div>
+                    </BetaOverlay>
                 );
 
             case "Sigurnost":
@@ -221,7 +236,8 @@ export default function PodesavanjaPage() {
                                 </button>
                             </div>
                         </div>
-
+                        
+                        <BetaOverlay isBlocked={true}>
                         <div className="space-y-4">
                             <div>
                                 <p className="text-lg font-bold">2FA autentifikacija</p>
@@ -239,6 +255,7 @@ export default function PodesavanjaPage() {
                                 </button>
                             </div>
                         </div>
+                        </BetaOverlay>
                     </div>
                 );
 
@@ -253,19 +270,19 @@ export default function PodesavanjaPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Naziv lokala</label>
-                                    <input type="text" value={"Salon Lepote 'GlowUp'"} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                                    <input type="text" value={firma?.naziv || "N/A"} readOnly className="w-full px-3 py-2 border border-gray-300 bg-gray-200 rounded" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Adresa</label>
-                                    <input type="text" value={"Bulevar Kralja Aleksandra 123, Beograd"} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                                    <input type="text" value={firma?.adresa || 'N/A'} readOnly className="w-full px-3 py-2 border border-gray-300 bg-gray-200 rounded" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Kontakt telefon</label>
-                                    <input type="text" value={"+381601234567"} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                                    <input type="text" value={firma?.telefon || 'N/A'} readOnly className="w-full px-3 py-2 border border-gray-300 bg-gray-200 rounded" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input type="email" value={"kontakt@glowup.rs"} className="w-full px-3 py-2 border border-gray-300 rounded" />
+                                    <input type="email" value={firma?.email || 'N/A'} readOnly className="w-full px-3 py-2 border border-gray-300 bg-gray-200 rounded" />
                                 </div>
                             </div>
                         </div>
@@ -312,11 +329,11 @@ export default function PodesavanjaPage() {
                             <div className="space-y-4 max-w-lg">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Ime i prezime</label>
-                                    <input type="text" value={"Marko Marković"} disabled className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700" />
+                                    <input type="text" value={korisnik?.ime || 'N/A'} disabled className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input type="email" value={"marko.markovic@email.com"} disabled className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700" />
+                                    <input type="email" value={korisnik?.email || 'N/A'} disabled className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-100 text-gray-700" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Opis problema</label>

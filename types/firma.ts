@@ -40,3 +40,15 @@ export interface FirmaAsortimanDTO {
     nazivUsluge: string;
     nazivKategorije: string;
 }
+
+export interface FirmaInventarDTO {
+    id: number;
+    idFirme: number;
+    idLokacije: number;
+    idKategorije: number;
+    nazivProizvoda: string;
+    trenutnaKolicina: number;
+    minKolicina: number;
+    datumPoslednjeNabavke: string;
+    nazivKategorije: string;
+}

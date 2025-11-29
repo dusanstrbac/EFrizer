@@ -1,12 +1,11 @@
 'use client';
+import DodajInventar from "@/components/DodajInventar";
 import UslugaModal from "@/components/UslugaModal";
-import { Firma, FirmaAsortimanDTO, Lokacije } from "@/types/firma";
+import { Firma, FirmaAsortimanDTO, FirmaInventarDTO, Lokacije } from "@/types/firma";
 import { getCookie } from "cookies-next";
-import { body } from "framer-motion/client";
-import { Trash2 } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 
-// AŽURIRANO: Dodajemo novi tab 'Usluge'
 const tabs = ['Osnovne informacije', 'Zaposleni', 'Inventar', 'Usluge'];
 
 const formatirajDatum = (datum: string) => {
@@ -17,23 +16,21 @@ export default function SalonPage() {
     const [firma, setFirma] = useState<Firma | null>(null); 
     const [salons, setSalons] = useState<Lokacije[]>([]);
     const [selectedSalonId, setSelectedSalonId] = useState<number | null>(null);
+    const [isInventarModalOpen, setInventoryModalOpen] = useState(false);
+    const [editingInventar, setEditingInventar] = useState(null);
     const [isUslugeModalOpen, setIsUslugeModalOpen] = useState(false);
     const [editingUsluge, setEditingUsluge] = useState(null);
     const [asortiman, setAsortiman] = useState<FirmaAsortimanDTO[]>([]);
     const [loadingAsortiman, setLoadingAsortiman] = useState(false);
     const [asortimanError, setAsortimanError] = useState<string | null>(null);
-
-
-
     const [activeTab, setActiveTab] = useState(tabs[0]);
     const containerRef = useRef<HTMLDivElement>(null);
     const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-
     const tabRefs = useRef<(HTMLButtonElement | null)[]>(Array(tabs.length).fill(null));
-
     const selectedSalon = salons.find(s => s.id === selectedSalonId);
+    const [inventory, setInventory] = useState<FirmaInventarDTO[]>([]);
+    const [searchInventoryTerm, setSearchInventoryTerm] = useState("");
 
-    
     useEffect(() => {
         const index = tabs.findIndex(tab => tab === activeTab);
         const currentTab = tabRefs.current[index];
@@ -69,7 +66,7 @@ export default function SalonPage() {
         fetchFirma();
     }, []);
 
-    // --- Fetch asortimana po lokaciji ---
+    // Fetch asortimana po lokaciji
     useEffect(() => {
         if (!selectedSalonId || !firma) return;
 
@@ -163,21 +160,48 @@ export default function SalonPage() {
         }
 
     // --- Inventar Logika - AŽURIRANO SA STVARNIM PODACIMA ---
-    const [searchInventoryTerm, setSearchInventoryTerm] = useState("");
-    const inventory = [
-        { naziv: "Šampon Gold Touch", kategorija: "Kozmetika", stanje: 12, minimum: 5, poslednja: "01.10.2025", status: "Na stanju", lokacijaId: 1 },
-        { naziv: "UV lampa za nokte", kategorija: "Oprema", stanje: 1, minimum: 2, poslednja: "15.09.2025", status: "Potrebna nabavka", lokacijaId: 1 },
-        { naziv: "Lak za kosu Extreme Hold", kategorija: "Kozmetika", stanje: 45, minimum: 20, poslednja: "20.10.2025", status: "Na stanju", lokacijaId: 2 },
-        { naziv: "Sto za masažu", kategorija: "Oprema", stanje: 1, minimum: 1, poslednja: "01.01.2024", status: "Na stanju", lokacijaId: 2 }
-    ];
+    
+    useEffect(() => {
+        if (!selectedSalonId || !firma) return;
+
+        const fetchInventar = async () => {
+            //setLoadingAsortiman(true);
+            //setAsortimanError(null);
+
+            try {
+                const token = getCookie("AuthToken");
+                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Inventar/DajInventar?idFirme=${firma.id}&idLokacije=${selectedSalonId}`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Greška prilikom učitavanja inventara.");
+
+                const data: FirmaInventarDTO[] = await res.json();
+                setInventory(data);
+            } catch (err) {
+                console.error(err);
+                setAsortimanError("Ne mogu da učitam asortiman.");
+            } finally {
+                setLoadingAsortiman(false);
+            }
+        };
+
+        fetchInventar();
+    }, [selectedSalonId, firma]);
+
     const filteredInventory = inventory
-        .filter((item) => item.lokacijaId === selectedSalonId)
-        .filter((item) => {
-            return (
-                item.naziv.toLowerCase().includes(searchInventoryTerm.toLowerCase()) ||
-                item.kategorija.toLowerCase().includes(searchInventoryTerm.toLowerCase())
-            );
-        });
+        .filter(item => 
+            item.nazivProizvoda.toLowerCase().includes(searchInventoryTerm.toLowerCase())
+        );
+
+    const getInventoryStatus = (item: FirmaInventarDTO) => {
+        if (item.trenutnaKolicina < item.minKolicina) {
+            return { label: "Potrebna nabavka", color: "bg-red-100 text-red-800" };
+        }
+        if (item.trenutnaKolicina === item.minKolicina) {
+            return { label: "Na minimumu", color: "bg-yellow-100 text-yellow-800" };
+        }
+        return { label: "U redu", color: "bg-green-100 text-green-800" };
+    };
 
     // Funkcija za formatiranje novca (nepromenjena)
     const formatCurrency = (amount: number) => {
@@ -190,7 +214,8 @@ export default function SalonPage() {
     };
 
     const registrujArtikal = () => {
-        alert("Dodajete proizvod u sistem");
+        setEditingInventar(null);
+        setInventoryModalOpen(true);
     }
 
     const registrujUslugu = () => {
@@ -288,7 +313,7 @@ export default function SalonPage() {
                     <div className="space-y-4"> 
                         <div className="flex justify-between mb-4">
                             <button className="border rounded-lg py-2 px-6 cursor-pointer hover:bg-gray-300" onClick={registrujArtikal}>
-                                Dodaj / Izmeni Artikal
+                                Dodaj Artikal
                             </button>
                             <input
                                 type="text"
@@ -308,22 +333,70 @@ export default function SalonPage() {
                                         <th className="p-2 border">Min. količina</th>
                                         <th className="p-2 border">Poslednja nabavka</th>
                                         <th className="p-2 border">Status</th>
+                                        <th className="p-2 border">Akcija</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredInventory.map((item, idx) => (
                                         <tr key={idx} className="text-sm text-center">
-                                            <td className="p-2 border">{item.naziv}</td>
-                                            <td className="p-2 border">{item.kategorija}</td>
-                                            <td className="p-2 border">{item.stanje}</td>
-                                            <td className="p-2 border">{item.minimum}</td>
-                                            <td className="p-2 border">{item.poslednja}</td>
+                                            <td className="p-2 border">{item.nazivProizvoda}</td>
+                                            <td className="p-2 border">{item.nazivKategorije}</td>
+                                            <td className="p-2 border">{item.trenutnaKolicina}</td>
+                                            <td className="p-2 border">{item.minKolicina}</td>
+                                            <td className="p-2 border">{item.datumPoslednjeNabavke}</td>
                                             <td className="p-2 border">
-                                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                    item.status === 'Na stanju' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                                }`}>
-                                                    {item.status}
-                                                </span>
+                                                {(() => {
+                                                    const s = getInventoryStatus(item);
+                                                    return (
+                                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${s.color}`}>
+                                                            {s.label}
+                                                        </span>
+                                                    );
+                                                })()}
+                                            </td>
+                                            <td className="p-2 border">
+                                                <div className="flex justify-center items-center">
+                                                    <Edit2
+                                                        className="cursor-pointer text-yellow-400 hover:text-yellow-500"
+                                                        onClick={async () => {
+                                                            const novaMinKolicina = prompt(`Unesi novu minimalnu količinu za ${item.nazivProizvoda}`, item.minKolicina.toString());
+                                                            if (!novaMinKolicina) return;
+                                                            const minK = parseInt(novaMinKolicina);
+                                                            if (isNaN(minK) || minK <= 0) {
+                                                                alert("Uneta vrednost nije validna.");
+                                                                return;
+                                                            }
+
+                                                            try {
+                                                                const token = getCookie("AuthToken");
+                                                                const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Inventar/AzurirajMinKolicinu`, {
+                                                                    method: "PATCH",
+                                                                    headers: {
+                                                                        "Authorization": `Bearer ${token}`,
+                                                                        "Content-Type": "application/json"
+                                                                    },
+                                                                    body: JSON.stringify({
+                                                                        idFirme: item.idFirme,
+                                                                        idLokacije: item.idLokacije,
+                                                                        idInventara: item.id,
+                                                                        minKolicina: minK
+                                                                    })
+                                                                });
+
+                                                                if (!res.ok) throw new Error("Greška pri ažuriranju.");
+
+                                                                // osveži lokalni state
+                                                                setInventory(prev => prev.map(inv => inv.id === item.id ? {...inv, minKolicina: minK} : inv));
+                                                                alert("Minimalna količina uspešno ažurirana.");
+                                                            } catch (err) {
+                                                                console.error(err);
+                                                                alert("Došlo je do greške prilikom ažuriranja.");
+                                                            }
+                                                        }}
+                                                    >
+                                                        Izmeni min
+                                                    </Edit2>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -450,9 +523,21 @@ export default function SalonPage() {
             <UslugaModal
                 isOpen={isUslugeModalOpen}
                 onClose={() => setIsUslugeModalOpen(false)}
-                onSave={(service) => {
-                    console.log("Sačuvana usluga:", service);
-                    alert("Usluga sačuvana!");
+                onSave={() => {
+                // Zameniti sa sooner-om umesto sa alertom
+                    alert("Uspešno ste registrovali novu uslugu");
+                }}
+                salons={salons}
+                selectedSalonId={selectedSalonId}
+                firmaId={firma?.id ?? null}
+            />
+
+            <DodajInventar
+                isOpen={isInventarModalOpen}
+                onClose={() => setInventoryModalOpen(false)}
+                onSave={() => {
+                // Zameniti sa sooner-om umesto sa alertom
+                    alert("Uspešno ste registrovali novu uslugu");
                 }}
                 salons={salons}
                 selectedSalonId={selectedSalonId}

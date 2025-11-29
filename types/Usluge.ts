@@ -18,7 +18,7 @@ export interface UslugaModalProps {
         id?: number;
         categoryId?: number;
         nameId?: number;
-        price?: number;
+        uslugaNaziv?: string;
         lokacijaId?: number;
     };
     salons: Salon[];
